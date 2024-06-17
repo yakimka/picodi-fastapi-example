@@ -1,7 +1,8 @@
 import logging
+from collections.abc import Callable
 
 import picodi
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, Response
 from fastapi.security import HTTPBasic
 from pydantic import BaseModel
 
@@ -16,7 +17,9 @@ security = HTTPBasic()
 
 
 @app.middleware("http")
-async def shutdown_dependencies_middleware(request: Request, call_next):
+async def shutdown_dependencies_middleware(
+    request: Request, call_next: Callable
+) -> Response:
     await picodi.init_dependencies(FastApiScope)
     response = await call_next(request)
     await picodi.shutdown_dependencies(FastApiScope)
@@ -24,7 +27,7 @@ async def shutdown_dependencies_middleware(request: Request, call_next):
 
 
 @app.get("/")
-def read_root():
+def read_root() -> dict:
     return {"Hello": "World"}
 
 

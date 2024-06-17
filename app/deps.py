@@ -9,6 +9,8 @@ from picodi import ContextVarScope, Provide, dependency, inject
 from app.data_access.user import SqliteUserRepository
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from app.user import IUserRepository
 
 logger = logging.getLogger(__name__)
@@ -19,7 +21,7 @@ class FastApiScope(ContextVarScope):
 
 
 @dependency(scope_class=FastApiScope)
-def get_sqlite_connection() -> sqlite3.Connection:
+def get_sqlite_connection() -> Generator[sqlite3.Connection, None, None]:
     conn = sqlite3.connect("db.sqlite", check_same_thread=False)
     logger.info("Connected to SQLite database. ID: %s", id(conn))
     try:

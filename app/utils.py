@@ -1,7 +1,7 @@
 import asyncio
 import hashlib
 import os
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from functools import partial, wraps
 from typing import ParamSpec, TypeVar
 
@@ -9,7 +9,7 @@ T = TypeVar("T")
 P = ParamSpec("P")
 
 
-def sync_to_async(sync_fn: Callable[P, T]) -> Callable[P, Awaitable[T]]:
+def sync_to_async(sync_fn: Callable[P, T]) -> Callable[P, Coroutine[None, None, T]]:
     """
     Wrapper to convert a synchronous function to an asynchronous function.
     Under the hood, it uses a thread pool to run the synchronous function.

@@ -13,7 +13,7 @@ async def create_user(
     nickname: str,
     password: str,
     user_repo: IUserRepository = Provide(get_user_repository),
-):
+) -> None:
     new_user = User(
         id=generate_new_user_id(),
         nickname=nickname,
