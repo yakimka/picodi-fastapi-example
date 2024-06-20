@@ -1,7 +1,8 @@
 import asyncio
 import hashlib
 import os
-from collections.abc import Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine
+from contextlib import asynccontextmanager
 from functools import partial, wraps
 from typing import ParamSpec, TypeVar
 
@@ -35,3 +36,13 @@ def verify_password(stored_password: str, provided_password: str) -> bool:
         "sha256", provided_password.encode("utf-8"), bytes.fromhex(salt), 100000
     )
     return pwdhash == pwdhash_check.hex()
+
+
+@asynccontextmanager
+async def rewrite_error(
+    error: type[Exception] | tuple[type[Exception], ...], new_error: Exception
+) -> AsyncGenerator[None, None]:
+    try:
+        yield
+    except error as e:
+        raise new_error from e

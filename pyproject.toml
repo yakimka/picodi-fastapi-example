@@ -28,9 +28,10 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-picodi = "^0.15.0"
+picodi = "^0.17.1"
 fastapi = "^0.111.0"
 uvicorn = "^0.30.1"
+httpx = "^0.27.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.10.0"
