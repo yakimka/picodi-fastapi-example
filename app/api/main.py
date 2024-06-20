@@ -1,44 +1,46 @@
+from __future__ import annotations
+
 import logging
-from collections.abc import Callable
+from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING
 
 import picodi
-from fastapi import Depends, FastAPI, Request, Response
-from fastapi.security import HTTPBasic
-from pydantic import BaseModel
+from fastapi import APIRouter, FastAPI
 
-from app.api.fastapi_deps import get_current_user
-from app.deps import FastApiScope
-from app.user import User
+from app.api.routes import users, weather
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
 
 logging.basicConfig(level=logging.INFO)
 
-app = FastAPI()
-security = HTTPBasic()
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+    await picodi.init_dependencies()
+    try:
+        yield
+    finally:
+        await picodi.shutdown_dependencies()
 
 
-@app.middleware("http")
-async def shutdown_dependencies_middleware(
-    request: Request, call_next: Callable
-) -> Response:
-    await picodi.init_dependencies(FastApiScope)
-    response = await call_next(request)
-    await picodi.shutdown_dependencies(FastApiScope)
-    return response
+def create_api_router() -> APIRouter:
+    router = APIRouter()
+    api_router = APIRouter(prefix="/api")
+    api_router.include_router(weather.router, prefix="/weather", tags=["weather"])
+    api_router.include_router(users.router, prefix="/users", tags=["users"])
+    router.include_router(api_router)
+    return router
 
 
-@app.get("/")
-def read_root() -> dict:
-    return {"Hello": "World"}
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title="Weather App",
+        description="Example Weather App API with Picodi and FastAPI",
+        lifespan=lifespan,
+    )
+    app.include_router(create_api_router())
+    return app
 
 
-class UserResp(BaseModel):
-    id: str
-    nickname: str
-
-
-@app.get("/whoami")
-def whoami(current_user: User = Depends(get_current_user)) -> UserResp:
-    return UserResp(id=current_user.id, nickname=current_user.nickname)
-
-
-# uvicorn app.api.main:app --reload
+# uvicorn --factory app.api.main:create_app --host=0.0.0.0 --port=8000 --reload
