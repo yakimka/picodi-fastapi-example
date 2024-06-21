@@ -15,12 +15,19 @@ security = HTTPBasic()
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
     user_repo: IUserRepository = Depends(Provide(get_user_repository)),
-) -> User:
+) -> User | None:
     user = await user_repo.get_user_by_email(credentials.username)
-    auth_error = HTTPException(status_code=401, detail="Invalid credentials")
     if user is None:
-        raise auth_error
+        return None
     if not verify_password(user.hashed_password, credentials.password):
-        raise auth_error
+        return None
 
+    return user
+
+
+async def get_current_user_or_raise_error(
+    user: Annotated[User | None, Depends(get_current_user)],
+) -> User:
+    if user is None:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     return user

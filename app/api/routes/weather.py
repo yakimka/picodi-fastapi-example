@@ -1,23 +1,24 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from picodi import Provide, inject
 from pydantic import BaseModel, Field
+from starlette import status
 
+from app.api.fastapi_deps import get_current_user
 from app.deps import get_geocoder_client, get_weather_client
-from app.weather import City
-from app.weather import Coordinates as DomainCoordinates
-from app.weather import IGeocoderClient, IWeatherClient, WeatherData
+from app.user import User
+from app.weather import City, Coordinates, IGeocoderClient, IWeatherClient, WeatherData
 
 router = APIRouter()
 
 
-class Coordinates(BaseModel):
+class CoordinatesResp(BaseModel):
     latitude: float = Field(..., description="Latitude", examples=[50.45466])
     longitude: float = Field(..., description="Longitude", examples=[30.5238])
 
-    def to_domain(self) -> DomainCoordinates:
-        return DomainCoordinates(
+    def to_domain(self) -> Coordinates:
+        return Coordinates(
             latitude=self.latitude,
             longitude=self.longitude,
         )
@@ -25,7 +26,7 @@ class Coordinates(BaseModel):
 
 class CityResp(BaseModel):
     name: str = Field(..., description="City name", examples=["Kyiv", "London"])
-    coordinates: Coordinates = Field(..., description="City coordinates")
+    coordinates: CoordinatesResp = Field(..., description="City coordinates")
     description: str = Field(
         ..., description="City description", examples=["Ukraine; Kyiv City"]
     )
@@ -34,7 +35,7 @@ class CityResp(BaseModel):
     def from_domain(cls, city: City) -> "CityResp":
         return cls(
             name=city.name,
-            coordinates=Coordinates(
+            coordinates=CoordinatesResp(
                 latitude=city.coordinates.latitude,
                 longitude=city.coordinates.longitude,
             ),
@@ -60,16 +61,28 @@ class WeatherResp(BaseModel):
         )
 
 
+def get_coordinates(
+    user: Annotated[User | None, Depends(get_current_user)],
+    latitude: Annotated[float | None, Query(example=50.45466)] = None,
+    longitude: Annotated[float | None, Query(example=30.5238)] = None,
+) -> Coordinates:
+    if latitude and longitude:
+        return Coordinates(latitude=latitude, longitude=longitude)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Latitude and Longitude are required for anonymous users",
+        )
+    return user.location
+
+
 @router.get("/current")
 @inject
 async def get_current_weather(
-    latitude: Annotated[float, Query(..., example=50.45466)],
-    longitude: Annotated[float, Query(..., example=30.5238)],
+    coords: Coordinates = Depends(get_coordinates),
     weather_client: IWeatherClient = Depends(Provide(get_weather_client)),
 ) -> WeatherResp:
-    weather = await weather_client.get_current_weather(
-        DomainCoordinates(latitude=latitude, longitude=longitude)
-    )
+    weather = await weather_client.get_current_weather(coords)
     return WeatherResp.from_domain(weather)
 
 
@@ -83,14 +96,11 @@ class ForecastResp(BaseModel):
 @router.get("/forecast")
 @inject
 async def get_forecast(
-    latitude: Annotated[float, Query(..., example=50.45466)],
-    longitude: Annotated[float, Query(..., example=30.5238)],
+    coords: Coordinates = Depends(get_coordinates),
     days: Annotated[int, Query(..., example=3)] = 1,
     weather_client: IWeatherClient = Depends(Provide(get_weather_client)),
 ) -> ForecastResp:
-    forecast = await weather_client.get_forecast(
-        DomainCoordinates(latitude=latitude, longitude=longitude), days=days
-    )
+    forecast = await weather_client.get_forecast(coords, days=days)
     time_data = []
     weather_data = []
     for time, weather in forecast:
