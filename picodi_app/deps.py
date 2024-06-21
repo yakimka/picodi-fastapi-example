@@ -7,15 +7,18 @@ from typing import TYPE_CHECKING, Any
 from httpx import AsyncClient
 from picodi import ContextVarScope, Provide, SingletonScope, dependency, inject
 
-from app.conf import Settings, parse_settings
-from app.data_access.user import SqliteUserRepository
-from app.data_access.weather import OpenMeteoGeocoderClient, OpenMeteoWeatherClient
+from picodi_app.conf import Settings, parse_settings
+from picodi_app.data_access.user import SqliteUserRepository
+from picodi_app.data_access.weather import (
+    OpenMeteoGeocoderClient,
+    OpenMeteoWeatherClient,
+)
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Callable, Generator
 
-    from app.user import IUserRepository
-    from app.weather import IGeocoderClient, IWeatherClient
+    from picodi_app.user import IUserRepository
+    from picodi_app.weather import IGeocoderClient, IWeatherClient
 
 logger = logging.getLogger(__name__)
 

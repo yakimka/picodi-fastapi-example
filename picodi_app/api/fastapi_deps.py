@@ -4,9 +4,9 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from picodi import Provide, inject
 
-from app.deps import get_user_repository
-from app.user import IUserRepository, User
-from app.utils import verify_password
+from picodi_app.deps import get_user_repository
+from picodi_app.user import IUserRepository, User
+from picodi_app.utils import verify_password
 
 security = HTTPBasic()
 

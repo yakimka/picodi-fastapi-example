@@ -3,8 +3,8 @@ from typing import Any
 
 from httpx import AsyncClient, HTTPError
 
-from app.utils import rewrite_error
-from app.weather import (
+from picodi_app.utils import rewrite_error
+from picodi_app.weather import (
     CantGetDataError,
     City,
     Coordinates,

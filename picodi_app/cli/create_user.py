@@ -3,10 +3,10 @@ import asyncio
 
 from picodi import Provide, inject
 
-from app.deps import get_user_repository
-from app.user import IUserRepository, User, generate_new_user_id
-from app.utils import hash_password
-from app.weather import Coordinates
+from picodi_app.deps import get_user_repository
+from picodi_app.user import IUserRepository, User, generate_new_user_id
+from picodi_app.utils import hash_password
+from picodi_app.weather import Coordinates
 
 
 @inject

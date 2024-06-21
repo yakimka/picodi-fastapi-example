@@ -1,9 +1,9 @@
 import sqlite3
 from collections.abc import Callable
 
-from app.user import IUserRepository, User
-from app.utils import sync_to_async
-from app.weather import Coordinates
+from picodi_app.user import IUserRepository, User
+from picodi_app.utils import sync_to_async
+from picodi_app.weather import Coordinates
 
 
 def user_deserializer(row: tuple) -> User:

@@ -5,10 +5,16 @@ from picodi import Provide, inject
 from pydantic import BaseModel, Field
 from starlette import status
 
-from app.api.fastapi_deps import get_current_user
-from app.deps import get_geocoder_client, get_weather_client
-from app.user import User
-from app.weather import City, Coordinates, IGeocoderClient, IWeatherClient, WeatherData
+from picodi_app.api.fastapi_deps import get_current_user
+from picodi_app.deps import get_geocoder_client, get_weather_client
+from picodi_app.user import User
+from picodi_app.weather import (
+    City,
+    Coordinates,
+    IGeocoderClient,
+    IWeatherClient,
+    WeatherData,
+)
 
 router = APIRouter()
 

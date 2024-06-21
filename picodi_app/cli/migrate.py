@@ -2,8 +2,8 @@ import sqlite3
 
 from picodi import Provide, inject
 
-from app.data_access.sqlite import create_tables
-from app.deps import get_sqlite_connection
+from picodi_app.data_access.sqlite import create_tables
+from picodi_app.deps import get_sqlite_connection
 
 
 @inject

@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBasic
 from pydantic import BaseModel
 
-from app.api.fastapi_deps import get_current_user_or_raise_error
-from app.user import User
+from picodi_app.api.fastapi_deps import get_current_user_or_raise_error
+from picodi_app.user import User
 
 router = APIRouter()
 security = HTTPBasic()

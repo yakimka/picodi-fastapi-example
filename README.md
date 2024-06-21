@@ -25,7 +25,7 @@ pip install picodi-fastapi-example
 Showcase how your project can be used:
 
 ```python
-from app.example import some_function
+from picodi_app.example import some_function
 
 print(some_function(3, 4))
 # => 7

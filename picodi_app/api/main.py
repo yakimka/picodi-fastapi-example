@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import picodi
 from fastapi import APIRouter, FastAPI
 
-from app.api.routes import users, weather
+from picodi_app.api.routes import users, weather
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
@@ -43,4 +43,4 @@ def create_app() -> FastAPI:
     return app
 
 
-# uvicorn --factory app.api.main:create_app --host=0.0.0.0 --port=8000 --reload
+# uvicorn --factory picodi_app.api.main:create_app --host=0.0.0.0 --port=8000 --reload

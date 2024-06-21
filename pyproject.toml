@@ -3,7 +3,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "picodi-fastapi-example"
+name = "picodi-app"
 description = "Just example of using Picodi with FastAPI"
 version = "0.1.0"
 license = "MIT"
