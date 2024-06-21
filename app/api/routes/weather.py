@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from app.deps import get_geocoder_client, get_weather_client
 from app.weather import City
 from app.weather import Coordinates as DomainCoordinates
-from app.weather import IGeocoderClient, IWeatherClient
+from app.weather import IGeocoderClient, IWeatherClient, WeatherData
 
 router = APIRouter()
 
@@ -49,6 +49,16 @@ class WeatherResp(BaseModel):
     wind_speed: int = Field(..., description="Wind speed in m/s", examples=[12])
     wind_direction: str = Field(..., description="Wind direction", examples=["N", "NE"])
 
+    @classmethod
+    def from_domain(cls, weather: WeatherData) -> "WeatherResp":
+        return cls(
+            temperature=round(weather.temperature.in_celsius()),
+            humidity=round(weather.humidity),
+            precipitation=weather.precipitation,
+            wind_speed=round(weather.wind_speed.in_meters_per_second()),
+            wind_direction=weather.wind_direction.value,
+        )
+
 
 @router.get("/current")
 @inject
@@ -60,13 +70,34 @@ async def get_current_weather(
     weather = await weather_client.get_current_weather(
         DomainCoordinates(latitude=latitude, longitude=longitude)
     )
-    return WeatherResp(
-        temperature=round(weather.temperature.in_celsius()),
-        humidity=round(weather.humidity),
-        precipitation=weather.precipitation,
-        wind_speed=round(weather.wind_speed.in_meters_per_second()),
-        wind_direction=weather.wind_direction.value,
+    return WeatherResp.from_domain(weather)
+
+
+class ForecastResp(BaseModel):
+    time: list[str] = Field(
+        ..., description="Time", examples=[["2021-08-01T12:00:00Z"]]
     )
+    weather_data: list[WeatherResp] = Field(..., description="Weather data")
+
+
+@router.get("/forecast")
+@inject
+async def get_forecast(
+    latitude: Annotated[float, Query(..., example=50.45466)],
+    longitude: Annotated[float, Query(..., example=30.5238)],
+    days: Annotated[int, Query(..., example=3)] = 1,
+    weather_client: IWeatherClient = Depends(Provide(get_weather_client)),
+) -> ForecastResp:
+    forecast = await weather_client.get_forecast(
+        DomainCoordinates(latitude=latitude, longitude=longitude), days=days
+    )
+    time_data = []
+    weather_data = []
+    for time, weather in forecast:
+        time_data.append(time.isoformat())
+        weather_data.append(WeatherResp.from_domain(weather))
+
+    return ForecastResp(time=time_data, weather_data=weather_data)
 
 
 @router.get("/geocode")

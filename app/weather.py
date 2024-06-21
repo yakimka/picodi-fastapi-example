@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 import abc
 from dataclasses import dataclass
 from enum import Enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class CantGetDataError(Exception):
@@ -54,7 +60,7 @@ class WindDirection(Enum):
     NW = "NW"
 
     @classmethod
-    def from_degrees(cls, degrees: float) -> "WindDirection":
+    def from_degrees(cls, degrees: float) -> WindDirection:
         directions = list(cls)
         directions_length = len(directions)
         index = round(degrees / (360 // directions_length)) % directions_length
@@ -79,6 +85,12 @@ class Coordinates:
 class IWeatherClient(abc.ABC):
     @abc.abstractmethod
     async def get_current_weather(self, coords: Coordinates) -> WeatherData:
+        pass
+
+    @abc.abstractmethod
+    async def get_forecast(
+        self, coords: Coordinates, days: int
+    ) -> list[tuple[datetime, WeatherData]]:
         pass
 
 
