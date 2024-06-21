@@ -12,4 +12,6 @@ def fastapi_app() -> FastAPI:
 
 @pytest.fixture()
 def api_client(fastapi_app) -> TestClient:
-    return TestClient(fastapi_app, base_url="http://testserver/api")
+    client = TestClient(fastapi_app, base_url="http://testserver/api")
+    client.auth = None
+    return client

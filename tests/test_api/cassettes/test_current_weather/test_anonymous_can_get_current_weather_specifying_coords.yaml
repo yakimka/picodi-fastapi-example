@@ -1,0 +1,40 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - api.open-meteo.com
+      user-agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?latitude=50.45466&longitude=30.5238&current=temperature_2m%2Crelative_humidity_2m%2Cprecipitation%2Cwind_speed_10m%2Cwind_direction_10m
+  response:
+    body:
+      string: !!binary |
+        eJxskU1ugzAQhe9iqTtCB5uYn20XXXWXvZXAJLGKbWQMVRvlTjlDTtaBkrQV2b735s03mhNrtkGH
+        vkZWriFORbaOWOPsYdYExCQc0KKnnLNBG1SmYyXEIHLgWSaFkFIWBecR60Ol3H7fYVAdVs7WYzBi
+        49CXs1THXt827FdQ293O46Cn6ruLDQ6zkuR5TAVV7z3aoHqrA1WepgLK687lEhKa0TagH7YNibfN
+        tAZNO3L3HhU3ZF0vLyR7HG8eUB17o2sdPn/MJ7Jaj5VudbgBGUPih7a16lrEWiUwJt/N8/Gm15pG
+        xvTsXS/sfAf+g8qBpyuQK55suCgB/jEXAEvaZDr9MaxMF6z0EFiyprF4DMqz9fn8DQAA//8DAOc2
+        pps=
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - deflate
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Fri, 21 Jun 2024 23:12:47 GMT
+      Transfer-Encoding:
+      - chunked
+    status:
+      code: 200
+      message: OK
+version: 1

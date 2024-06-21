@@ -4,9 +4,10 @@ pytestmark = pytest.mark.integration
 
 
 def test_whoami_for_anonymous_return_401(api_client):
-    response = api_client.get("/users/whoami")
+    response = api_client.get("/users/whoami", auth=("", ""))
 
     assert response.status_code == 401, response.text
+    assert response.json()["detail"] == "Invalid credentials"
 
 
 async def test_whoami_with_wrong_password_return_401(
@@ -23,6 +24,7 @@ async def test_whoami_with_wrong_password_return_401(
     response = api_client.get("/users/whoami", auth=("me@me.com", "wrong"))
 
     assert response.status_code == 401, response.text
+    assert response.json()["detail"] == "Invalid credentials"
 
 
 async def test_whoami_with_valid_password_return_user_info(
