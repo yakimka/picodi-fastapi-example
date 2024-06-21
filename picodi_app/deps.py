@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Any
 from httpx import AsyncClient
 from picodi import Provide, SingletonScope, dependency, inject
 
-from picodi_app.conf import Settings, parse_settings
+from picodi_app.conf import Settings, SqliteDatabaseSettings, parse_settings
+from picodi_app.data_access.sqlite import create_tables
 from picodi_app.data_access.user import SqliteUserRepository
 from picodi_app.data_access.weather import (
     OpenMeteoGeocoderClient,
@@ -46,12 +47,17 @@ def get_option(
 @dependency(scope_class=SingletonScope)
 @inject
 def get_sqlite_connection(
-    db_settings: str = Provide(get_option(lambda s: s.database.settings)),
+    db_settings: SqliteDatabaseSettings = Provide(
+        get_option(lambda s: s.database.settings)
+    ),
 ) -> Generator[sqlite3.Connection, None, None]:
-    if not hasattr(db_settings, "db_name"):
+    if not isinstance(db_settings, SqliteDatabaseSettings):
         raise ValueError("Invalid database settings")
     conn = sqlite3.connect(db_settings.db_name, check_same_thread=False)
     logger.info("Connected to SQLite database. ID: %s", id(conn))
+    if db_settings.create_db:
+        create_tables(conn)
+        logger.info("Created tables in SQLite database")
     try:
         yield conn
     finally:
