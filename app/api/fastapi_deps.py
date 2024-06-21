@@ -16,7 +16,7 @@ async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
     user_repo: IUserRepository = Depends(Provide(get_user_repository)),
 ) -> User:
-    user = await user_repo.get_user_by_nickname(credentials.username)
+    user = await user_repo.get_user_by_email(credentials.username)
     auth_error = HTTPException(status_code=401, detail="Invalid credentials")
     if user is None:
         raise auth_error

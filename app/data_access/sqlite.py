@@ -6,7 +6,8 @@ def create_tables(conn: sqlite3.Connection) -> None:
         """
         CREATE TABLE users (
             id TEXT PRIMARY KEY,
-            nickname TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL UNIQUE,
+            location TEXT NOT NULL,
             hashed_password TEXT NOT NULL
         )
         """

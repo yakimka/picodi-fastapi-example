@@ -81,6 +81,14 @@ class Coordinates:
     latitude: float
     longitude: float
 
+    @classmethod
+    def from_string(cls, coords: str) -> Coordinates:
+        lat, lon = coords.split(",")
+        return cls(latitude=float(lat), longitude=float(lon))
+
+    def to_string(self) -> str:
+        return f"{self.latitude},{self.longitude}"
+
 
 class IWeatherClient(abc.ABC):
     @abc.abstractmethod

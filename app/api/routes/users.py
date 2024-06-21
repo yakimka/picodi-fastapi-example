@@ -11,9 +11,9 @@ security = HTTPBasic()
 
 class UserResp(BaseModel):
     id: str
-    nickname: str
+    email: str
 
 
 @router.get("/whoami")
 def whoami(current_user: User = Depends(get_current_user)) -> UserResp:
-    return UserResp(id=current_user.id, nickname=current_user.nickname)
+    return UserResp(id=current_user.id, email=current_user.email)

@@ -1,22 +1,25 @@
+from __future__ import annotations
+
 import abc
 import uuid
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.weather import Coordinates
 
 
 @dataclass
 class User:
     id: str
-    nickname: str
+    email: str
+    location: Coordinates
     hashed_password: str
 
 
 class IUserRepository(abc.ABC):
     @abc.abstractmethod
-    async def get_user_by_id(self, id: str) -> User | None:
-        pass
-
-    @abc.abstractmethod
-    async def get_user_by_nickname(self, nickname: str) -> User | None:
+    async def get_user_by_email(self, email: str) -> User | None:
         pass
 
     @abc.abstractmethod
