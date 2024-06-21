@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
 
 import picodi
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request, Response
+from picodi import ContextVarScope
 
 from picodi_app.api.routes import users, weather
 
@@ -40,7 +42,18 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.include_router(create_api_router())
+    app.middleware("http")(manage_request_scoped_deps)
     return app
+
+
+async def manage_request_scoped_deps(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    print("middleware")
+    await picodi.init_dependencies(scope_class=ContextVarScope)
+    response = await call_next(request)
+    await picodi.shutdown_dependencies(scope_class=ContextVarScope)
+    return response
 
 
 # uvicorn --factory picodi_app.api.main:create_app --host=0.0.0.0 --port=8000 --reload

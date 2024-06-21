@@ -5,7 +5,7 @@ import sqlite3
 from typing import TYPE_CHECKING, Any
 
 from httpx import AsyncClient
-from picodi import ContextVarScope, Provide, SingletonScope, dependency, inject
+from picodi import Provide, SingletonScope, dependency, inject
 
 from picodi_app.conf import Settings, parse_settings
 from picodi_app.data_access.user import SqliteUserRepository
@@ -23,10 +23,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class FastApiScope(ContextVarScope):
-    pass
-
-
 @dependency(scope_class=SingletonScope)
 def get_settings() -> Settings:
     return parse_settings()
@@ -40,7 +36,7 @@ def get_option(getter: Callable[[Settings], Any], /) -> Callable[[], Any]:
     return get_option_inner
 
 
-@dependency(scope_class=FastApiScope)
+@dependency(scope_class=SingletonScope)
 def get_sqlite_connection() -> Generator[sqlite3.Connection, None, None]:
     conn = sqlite3.connect("db.sqlite", check_same_thread=False)
     logger.info("Connected to SQLite database. ID: %s", id(conn))
