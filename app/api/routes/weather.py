@@ -50,14 +50,14 @@ class WeatherResp(BaseModel):
     wind_direction: str = Field(..., description="Wind direction", examples=["N", "NE"])
 
 
-@router.get("/")
+@router.get("/current")
 @inject
-async def get_weather(
+async def get_current_weather(
     latitude: Annotated[float, Query(..., example=50.45466)],
     longitude: Annotated[float, Query(..., example=30.5238)],
     weather_client: IWeatherClient = Depends(Provide(get_weather_client)),
 ) -> WeatherResp:
-    weather = await weather_client.get_weather(
+    weather = await weather_client.get_current_weather(
         DomainCoordinates(latitude=latitude, longitude=longitude)
     )
     return WeatherResp(

@@ -78,7 +78,7 @@ class Coordinates:
 
 class IWeatherClient(abc.ABC):
     @abc.abstractmethod
-    async def get_weather(self, coords: Coordinates) -> WeatherData:
+    async def get_current_weather(self, coords: Coordinates) -> WeatherData:
         pass
 
 

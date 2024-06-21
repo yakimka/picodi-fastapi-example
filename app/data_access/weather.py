@@ -25,7 +25,7 @@ class OpenMeteoWeatherClient(IWeatherClient):
         self._http_client = http_client
 
     @rewrite_error(HTTPError, new_error=CantGetDataError("Can't get weather data"))
-    async def get_weather(self, coords: Coordinates) -> WeatherData:
+    async def get_current_weather(self, coords: Coordinates) -> WeatherData:
         needed_data = [
             "temperature_2m",
             "relative_humidity_2m",
