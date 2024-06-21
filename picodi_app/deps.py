@@ -15,7 +15,7 @@ from picodi_app.data_access.weather import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Callable, Generator
+    from collections.abc import AsyncGenerator, Callable, Generator  # noqa: TC004
 
     from picodi_app.user import IUserRepository
     from picodi_app.weather import IGeocoderClient, IWeatherClient
@@ -28,17 +28,29 @@ def get_settings() -> Settings:
     return parse_settings()
 
 
-def get_option(getter: Callable[[Settings], Any], /) -> Callable[[], Any]:
+def get_option(
+    getter: Callable[[Settings], Any], default: Any = ...
+) -> Callable[[], Any]:
     @inject
     def get_option_inner(settings: Settings = Provide(get_settings)) -> Any:
-        return getter(settings)
+        try:
+            return getter(settings)
+        except LookupError:
+            if default is not ...:
+                return default
+            raise
 
     return get_option_inner
 
 
 @dependency(scope_class=SingletonScope)
-def get_sqlite_connection() -> Generator[sqlite3.Connection, None, None]:
-    conn = sqlite3.connect("db.sqlite", check_same_thread=False)
+@inject
+def get_sqlite_connection(
+    db_settings: str = Provide(get_option(lambda s: s.database.settings)),
+) -> Generator[sqlite3.Connection, None, None]:
+    if not hasattr(db_settings, "db_name"):
+        raise ValueError("Invalid database settings")
+    conn = sqlite3.connect(db_settings.db_name, check_same_thread=False)
     logger.info("Connected to SQLite database. ID: %s", id(conn))
     try:
         yield conn
