@@ -57,6 +57,7 @@ line_length = "88"
 line-length = "88"
 
 [tool.pytest.ini_options]
+pythonpath = "."
 markers = [
     "integration: mark a test as an test that need external resources (databases, services, etc.)",
 ]

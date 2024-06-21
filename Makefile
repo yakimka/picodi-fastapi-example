@@ -24,7 +24,7 @@ mypy:  ## Run mypy
 
 .PHONY: test
 test:  ## Run tests
-	$(RUN) poetry run pytest --cov=tests --cov=app $(args)
+	$(RUN) poetry run pytest --cov=tests --cov=picodi_app $(args)
 	$(RUN) poetry run pytest --dead-fixtures
 
 .PHONY: package
