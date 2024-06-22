@@ -1,3 +1,25 @@
+"""
+This module contains FastAPI dependencies.
+
+# Picodi Note:
+
+FastAPI has a built-in dependency injection system. It's a great way to manage
+dependencies in your application. However, it lacks some features that Picodi
+provides. For example, Picodi allows you to use scopes for your dependencies.
+This is useful when you want to manage the lifecycle of your dependencies.
+Another drawback of FastAPI's dependency injection system is that it works only
+in FastAPI views. If you want to use dependencies in other parts of your
+application, like workers, cli commands, etc., you need to pass them manually.
+
+Picodi is a general-purpose dependency injection library that works with any
+Python application. It provides a more flexible dependency injection system.
+You can use it with FastAPI, Django, Flask, or any other Python framework.
+
+So, this file contains only FastAPI dependencies that related only to FastAPI views.
+Parsing query strings, request bodies, and headers, and other FastAPI-specific
+dependencies should be placed here.
+"""
+
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
@@ -14,6 +36,11 @@ security = HTTPBasic()
 @inject
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
+    # Picodi Note:
+    #   you can use Picodi dependencies in FastAPI views by providing them with
+    #   `Provide` and wrapping views with `inject`.
+    #   This way, you can use the same dependencies in other parts of
+    #   your application.
     user_repo: IUserRepository = Depends(Provide(get_user_repository)),
 ) -> User | None:
     user = await user_repo.get_user_by_email(credentials.username)
@@ -25,6 +52,11 @@ async def get_current_user(
     return user
 
 
+# Picodi Note:
+#   This dependency requires `get_current_user` dependency to be resolved first.
+#   Even though `get_current_user` uses Picodi dependency `get_user_repository`,
+#   you can use it here without `Provide` and `inject` because it's already
+#   resolved in `get_current_user`.
 async def get_current_user_or_raise_error(
     user: Annotated[User | None, Depends(get_current_user)],
 ) -> User:
