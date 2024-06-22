@@ -19,12 +19,10 @@ class User:
 
 class IUserRepository(abc.ABC):
     @abc.abstractmethod
-    async def get_user_by_email(self, email: str) -> User | None:
-        pass
+    async def get_user_by_email(self, email: str) -> User | None: ...
 
     @abc.abstractmethod
-    async def create_user(self, user: User) -> None:
-        pass
+    async def create_user(self, user: User) -> None: ...
 
 
 def generate_new_user_id() -> str:
