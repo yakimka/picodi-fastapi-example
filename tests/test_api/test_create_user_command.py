@@ -7,6 +7,14 @@ from picodi_app.cli.create_user import main as create_user_main
 pytestmark = pytest.mark.integration
 
 
+@pytest.fixture()
+def settings_for_tests(settings_for_tests, tmpdir):
+    # `create_user` will close the database connection,
+    #   so we need to use a file-based database
+    settings_for_tests.database.settings.db_name = str(tmpdir / "db.sqlite")
+    return settings_for_tests
+
+
 @pytest.mark.parametrize(
     "invalid_coords",
     [
