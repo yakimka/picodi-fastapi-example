@@ -1,10 +1,9 @@
 import picodi
 import pytest
-from picodi import Provide, inject
+from picodi.helpers import enter
 
 from picodi_app.conf import DatabaseSettings, Settings, SqliteDatabaseSettings
 from picodi_app.deps import get_settings, get_user_repository
-from picodi_app.user import IUserRepository
 from picodi_app.weather import Coordinates
 
 from .object_mother import ObjectMother
@@ -42,9 +41,9 @@ async def _override_deps(settings_for_tests):
 
 
 @pytest.fixture()
-@inject
-def user_repository(user_repo: IUserRepository = Provide(get_user_repository)):
-    return user_repo
+def user_repository():
+    with enter(get_user_repository) as user_repo:
+        yield user_repo
 
 
 @pytest.fixture()
