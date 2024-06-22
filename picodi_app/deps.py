@@ -5,7 +5,7 @@ import sqlite3
 from typing import TYPE_CHECKING, Any
 
 from httpx import AsyncClient
-from picodi import Provide, SingletonScope, dependency, inject
+from picodi import ContextVarScope, Provide, SingletonScope, dependency, inject
 from picodi.helpers import enter
 from redis import asyncio as aioredis
 
@@ -130,6 +130,11 @@ async def get_redis_client(
         await redis.aclose()
 
 
+# Picodi Note:
+#   Note that `get_redis_client` is an async dependency, but we inject it
+#   into a sync `get_redis_user_repository` dependency.
+#   It can be done because we use `SingletonScope` and `init_dependencies` function
+#   to initialize dependencies on app startup (see `picodi_app.api.main.lifespan`).
 @inject
 def get_redis_user_repository(
     redis: aioredis.Redis = Provide(get_redis_client),
@@ -157,7 +162,15 @@ def get_user_repository(
         raise ValueError(f"Unsupported database type: {db_type}")
 
 
-@dependency(scope_class=SingletonScope)
+# Picodi Note:
+#   We use `ContextVarScope` to create http client for open-meteo service.
+#   That means that even if will be created multiple repositories or services
+#   that depend on `get_open_meteo_http_client` they will share the same instance
+#   of the http client (across one request).
+#
+#   In real project we would use `httpx.AsyncClient` with connection pooling
+#   and reuse the same instance of the client across multiple requests.
+@dependency(scope_class=ContextVarScope)
 async def get_open_meteo_http_client() -> AsyncGenerator[AsyncClient, None]:
     logger.info("Creating new httpx.AsyncClient instance")
     async with AsyncClient() as client:
@@ -165,20 +178,15 @@ async def get_open_meteo_http_client() -> AsyncGenerator[AsyncClient, None]:
     logger.info("Closing httpx.AsyncClient instance")
 
 
-# Picodi Note:
-#   Note that `get_open_meteo_http_client` is an async dependency, but we inject it
-#   into a sync `get_weather_client` dependency.
-#   It can be done because we use `SingletonScope` and `init_dependencies` function
-#   to initialize dependencies on app startup (see `picodi_app.api.main.lifespan`).
 @inject
-def get_weather_client(
+async def get_weather_client(
     http_client: AsyncClient = Provide(get_open_meteo_http_client),
 ) -> IWeatherClient:
     return OpenMeteoWeatherClient(http_client=http_client)
 
 
 @inject
-def get_geocoder_client(
+async def get_geocoder_client(
     http_client: AsyncClient = Provide(get_open_meteo_http_client),
 ) -> IGeocoderClient:
     return OpenMeteoGeocoderClient(http_client=http_client)
