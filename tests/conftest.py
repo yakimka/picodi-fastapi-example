@@ -16,7 +16,10 @@ def mother():
 
 @pytest.fixture(autouse=True)
 def vcr_config():
-    return {"ignore_hosts": ["testserver"], "ignore_localhost": True}
+    return {
+        "ignore_hosts": ["testserver", "test", "localhost"],
+        "ignore_localhost": True,
+    }
 
 
 @pytest.fixture()

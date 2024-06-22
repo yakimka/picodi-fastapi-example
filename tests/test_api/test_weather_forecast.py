@@ -7,16 +7,16 @@ from picodi_app.weather import WindDirection
 pytestmark = [pytest.mark.integration, pytest.mark.block_network]
 
 
-def test_anonymous_cant_get_forecast_not_specifying_coords(api_client):
-    response = api_client.get("/weather/forecast", auth=("", ""))
+async def test_anonymous_cant_get_forecast_not_specifying_coords(api_client):
+    response = await api_client.get("/weather/forecast", auth=("", ""))
 
     assert response.status_code == 400, response.text
     assert "latitude and longitude are required" in response.json()["detail"].lower()
 
 
 @pytest.mark.vcr
-def test_anonymous_can_get_forecast_specifying_coords(api_client):
-    response = api_client.get(
+async def test_anonymous_can_get_forecast_specifying_coords(api_client):
+    response = await api_client.get(
         "/weather/forecast",
         params={
             "latitude": 50.45466,
@@ -32,8 +32,8 @@ def test_anonymous_can_get_forecast_specifying_coords(api_client):
 
 @pytest.mark.usefixtures("user_in_db")
 @pytest.mark.vcr
-def test_user_can_get_forecast_by_coords(api_client):
-    response = api_client.get(
+async def test_user_can_get_forecast_by_coords(api_client):
+    response = await api_client.get(
         "/weather/forecast",
         params={
             "latitude": 50.45466,
@@ -49,8 +49,8 @@ def test_user_can_get_forecast_by_coords(api_client):
 
 @pytest.mark.usefixtures("user_in_db")
 @pytest.mark.vcr
-def test_user_can_get_forecast_by_coords_from_profile(api_client):
-    response = api_client.get(
+async def test_user_can_get_forecast_by_coords_from_profile(api_client):
+    response = await api_client.get(
         "/weather/forecast",
         auth=("me@me.com", "12345678"),
     )
