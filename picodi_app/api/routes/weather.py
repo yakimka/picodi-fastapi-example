@@ -103,7 +103,7 @@ class ForecastResp(BaseModel):
 @inject
 async def get_forecast(
     coords: Coordinates = Depends(get_coordinates),
-    days: Annotated[int, Query(..., example=3)] = 1,
+    days: Annotated[int, Query(..., ge=1, le=7, example=3)] = 1,
     weather_client: IWeatherClient = Depends(Provide(get_weather_client)),
 ) -> ForecastResp:
     forecast = await weather_client.get_forecast(coords, days=days)
