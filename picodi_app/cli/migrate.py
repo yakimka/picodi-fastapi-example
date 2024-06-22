@@ -13,5 +13,9 @@ def run_migrations(
     create_tables(sqlite_conn)
 
 
-if __name__ == "__main__":
+def main() -> None:
     run_migrations()
+
+
+if __name__ == "__main__":
+    main()
