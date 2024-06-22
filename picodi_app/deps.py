@@ -6,10 +6,17 @@ from typing import TYPE_CHECKING, Any
 
 from httpx import AsyncClient
 from picodi import Provide, SingletonScope, dependency, inject
+from picodi.helpers import enter
+from redis import asyncio as aioredis
 
-from picodi_app.conf import Settings, SqliteDatabaseSettings, parse_settings
+from picodi_app.conf import (
+    RedisDatabaseSettings,
+    Settings,
+    SqliteDatabaseSettings,
+    parse_settings,
+)
 from picodi_app.data_access.sqlite import create_tables
-from picodi_app.data_access.user import SqliteUserRepository
+from picodi_app.data_access.user import RedisUserRepository, SqliteUserRepository
 from picodi_app.data_access.weather import (
     OpenMeteoGeocoderClient,
     OpenMeteoWeatherClient,
@@ -55,10 +62,20 @@ def get_option(
     return get_option_inner
 
 
+def is_db_dormant(type: str) -> Callable[[], bool]:
+    @inject
+    def is_db_active_func(
+        db_type: str = Provide(get_option(lambda s: s.database.type)),
+    ) -> bool:
+        return db_type != type
+
+    return is_db_active_func
+
+
 # Picodi Note:
 #   Thanks to `SingletonScope` we can use sqlite connection
 #   even with ":memory:" database.
-@dependency(scope_class=SingletonScope)
+@dependency(scope_class=SingletonScope, ignore_manual_init=is_db_dormant("sqlite"))
 @inject
 def get_sqlite_connection(
     db_settings: SqliteDatabaseSettings = Provide(
@@ -80,13 +97,55 @@ def get_sqlite_connection(
 
 
 @inject
-def get_user_repository(
+def get_sqlite_user_repository(
     conn: sqlite3.Connection = Provide(get_sqlite_connection),
-) -> IUserRepository:
+) -> SqliteUserRepository:
     logger.info(
         "Creating SqliteUserRepository instance with connection ID: %s", id(conn)
     )
     return SqliteUserRepository(conn)
+
+
+@dependency(scope_class=SingletonScope, ignore_manual_init=is_db_dormant("redis"))
+@inject
+async def get_redis_client(
+    db_settings: RedisDatabaseSettings = Provide(
+        get_option(lambda s: s.database.settings)
+    ),
+) -> AsyncGenerator[aioredis.Redis, None]:
+    if not isinstance(db_settings, RedisDatabaseSettings):
+        raise ValueError("Invalid database settings")
+
+    redis = aioredis.from_url(db_settings.url, decode_responses=True)  # type: ignore
+    try:
+        yield redis
+    finally:
+        await redis.aclose()
+
+
+@inject
+def get_redis_user_repository(
+    redis: aioredis.Redis = Provide(get_redis_client),
+) -> RedisUserRepository:
+    logger.info(
+        "Creating RedisUserRepository instance with connection ID: %s", id(redis)
+    )
+    return RedisUserRepository(redis)
+
+
+# @dependency(scope_class=SingletonScope, ignore_manual_init=True)
+@inject
+def get_user_repository(
+    db_type: str = Provide(get_option(lambda s: s.database.type)),
+) -> Generator[IUserRepository, None, None]:
+    if db_type == "sqlite":
+        with enter(get_sqlite_user_repository) as repo:
+            yield repo
+    elif db_type == "redis":
+        with enter(get_redis_user_repository) as repo:
+            yield repo
+    else:
+        raise ValueError(f"Unsupported database type: {db_type}")
 
 
 @dependency(scope_class=SingletonScope)

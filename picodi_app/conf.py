@@ -6,11 +6,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class SqliteDatabaseSettings(BaseModel):
     db_name: str = "db.sqlite"
-    create_db: bool = False
+    create_db: bool = True
 
 
 class RedisDatabaseSettings(BaseModel):
-    url: str = "redis://redis:6379/0"
+    url: str = "redis://localhost:6379/0"
 
 
 class DatabaseSettings(BaseModel):

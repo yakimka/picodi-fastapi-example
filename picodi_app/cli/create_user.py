@@ -5,6 +5,7 @@ import asyncio
 from typing import TYPE_CHECKING, Any
 
 from picodi import Provide, inject
+from picodi.helpers import lifespan
 
 from picodi_app.deps import get_user_repository
 from picodi_app.user import IUserRepository, User, generate_new_user_id
@@ -15,6 +16,9 @@ if TYPE_CHECKING:
     from collections.abc import Coroutine
 
 
+# Picodi Note:
+#   `lifespan` decorator is used to automatically init and shutdown dependencies
+@lifespan
 # Picodi Note:
 #   With Picodi you can use same dependencies in CLI and API code.
 @inject
