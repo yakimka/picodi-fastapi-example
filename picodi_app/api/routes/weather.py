@@ -82,7 +82,14 @@ def get_coordinates(
     return user.location
 
 
-@router.get("/current")
+@router.get(
+    "/current",
+    description=(
+        "Get current weather. "
+        "For authenticated users, it can use user's location from profile. "
+        "For anonymous users, it requires latitude and longitude"
+    ),
+)
 @inject
 async def get_current_weather(
     coords: Coordinates = Depends(get_coordinates),
@@ -99,7 +106,14 @@ class ForecastResp(BaseModel):
     weather_data: list[WeatherResp] = Field(..., description="Weather data")
 
 
-@router.get("/forecast")
+@router.get(
+    "/forecast",
+    description=(
+        "Get forecast for n days. "
+        "For authenticated users, it can use user's location from profile. "
+        "For anonymous users, it requires latitude and longitude"
+    ),
+)
 @inject
 async def get_forecast(
     coords: Coordinates = Depends(get_coordinates),
@@ -116,7 +130,10 @@ async def get_forecast(
     return ForecastResp(time=time_data, weather_data=weather_data)
 
 
-@router.get("/geocode")
+@router.get(
+    "/geocode",
+    description="Get city coordinates by city name",
+)
 @inject
 async def geocode(
     city: Annotated[str, Query(..., example="Kyiv")],

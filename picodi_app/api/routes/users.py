@@ -14,6 +14,9 @@ class UserResp(BaseModel):
     email: str
 
 
-@router.get("/whoami")
+@router.get(
+    "/whoami",
+    description="Get current user. Requires authentication (Basic Auth).",
+)
 def whoami(current_user: User = Depends(get_current_user_or_raise_error)) -> UserResp:
     return UserResp(id=current_user.id, email=current_user.email)
