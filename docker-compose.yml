@@ -8,7 +8,6 @@ x-common: &common
     args:
       - PYTHON_VERSION=${PYTHON_VERSION:-3.11}
   image: "picodi-fastapi-example:dev"
-#  env_file: .env
   volumes:
     - .:/opt/code
 
@@ -22,3 +21,9 @@ services:
     restart: "no"
     ports:
       - "8000:8000"
+
+  redis:
+    image: "redis:7.2.5-alpine"
+    restart: "no"
+    ports:
+      - "6379:6379"

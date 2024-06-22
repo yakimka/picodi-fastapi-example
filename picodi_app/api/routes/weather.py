@@ -69,8 +69,8 @@ class WeatherResp(BaseModel):
 
 def get_coordinates(
     user: Annotated[User | None, Depends(get_current_user)],
-    latitude: Annotated[float | None, Query(example=50.45466)] = None,
-    longitude: Annotated[float | None, Query(example=30.5238)] = None,
+    latitude: Annotated[float | None, Query(examples=[50.45466])] = None,
+    longitude: Annotated[float | None, Query(examples=[30.5238])] = None,
 ) -> Coordinates:
     if latitude and longitude:
         return Coordinates(latitude=latitude, longitude=longitude)
@@ -117,7 +117,7 @@ class ForecastResp(BaseModel):
 @inject
 async def get_forecast(
     coords: Coordinates = Depends(get_coordinates),
-    days: Annotated[int, Query(..., ge=1, le=7, example=3)] = 1,
+    days: Annotated[int, Query(..., ge=1, le=7)] = 1,
     weather_client: IWeatherClient = Depends(Provide(get_weather_client)),
 ) -> ForecastResp:
     forecast = await weather_client.get_forecast(coords, days=days)
@@ -136,7 +136,7 @@ async def get_forecast(
 )
 @inject
 async def geocode(
-    city: Annotated[str, Query(..., example="Kyiv")],
+    city: Annotated[str, Query(..., examples=["Kyiv"])],
     geocoder_client: IGeocoderClient = Depends(Provide(get_geocoder_client)),
 ) -> list[CityResp]:
     results = await geocoder_client.get_coordinates_by_city(city)

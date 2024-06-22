@@ -1,0 +1,44 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - api.open-meteo.com
+      user-agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?latitude=50.45466&longitude=30.5238&forecast_days=1&hourly=temperature_2m%2Crelative_humidity_2m%2Cprecipitation_probability%2Cwind_speed_10m%2Cwind_direction_10m
+  response:
+    body:
+      string: !!binary |
+        eJx8U81u2zAMfhcDu7GeqD/Lue6w0269GYaRxGojLLYDx87QFXmnPkOfbKSdtgO4FTYp6aM++iNl
+        PWfH7ZSmuY3ZxqncmsJBdhz6xxtmVE7AY+zjSPuGfkpdbLpztlG5KqzSofQhICrj0EM2T/tmeHg4
+        x6k5x/3Qt7wRMib9HnpKl33/cZ99AM12txvjJS2p36PxGC83BEPIKcFhmMfjUzP3aaKMzwuftqfz
+        ELxCThi7Eyucx9jojkKvL98IHiNXd4nNYe5Sm6anNfiFQqcx7tMpTcuHmtM47La7dKQtt/iv1LfN
+        +RRj26Bi0s/u6+ENbxOxF+Iae33Jrm8qP/RVmVba3il/p/W9UhuliP83hBLSEjISshJyEvISKiQU
+        JFQKCKV6lOpRqkepHqV6lOpRqkepHqV6lOq1VK+lei3V60V9Lf+vCn1eADkN6PJwc0VuAMvcg8a8
+        BG14ZimgHc883SRdEIPcMgvvznA0sENmOOZa0JrdkgrXpKb+3z9dFRaKAooSAvLEB3AI1oFFMCUY
+        D8YurwGjwTgwgUPOgAvgDXiiWJrUn96MSsHnD8kH6gECcjXrW8vLVHFrDJfNxS1GNXMzuQtk3DVD
+        OPeCzVGMW8w99MvaEs58Ns7laa3IeJ+q/31PK12QoMUKMkXi9Do6kqBptJTO8oH5m9EBUHdWDo+8
+        5uOhCktPJ25pJJ5iw/p6/QMAAP//AwBoLkwB
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - deflate
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Sat, 22 Jun 2024 21:50:11 GMT
+      Transfer-Encoding:
+      - chunked
+    status:
+      code: 200
+      message: OK
+version: 1

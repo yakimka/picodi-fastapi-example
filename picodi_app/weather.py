@@ -92,14 +92,12 @@ class Coordinates:
 
 class IWeatherClient(abc.ABC):
     @abc.abstractmethod
-    async def get_current_weather(self, coords: Coordinates) -> WeatherData:
-        pass
+    async def get_current_weather(self, coords: Coordinates) -> WeatherData: ...
 
     @abc.abstractmethod
     async def get_forecast(
         self, coords: Coordinates, days: int
-    ) -> list[tuple[datetime, WeatherData]]:
-        pass
+    ) -> list[tuple[datetime, WeatherData]]: ...
 
 
 @dataclass
@@ -111,5 +109,4 @@ class City:
 
 class IGeocoderClient(abc.ABC):
     @abc.abstractmethod
-    async def get_coordinates_by_city(self, city: str) -> list[City]:
-        pass
+    async def get_coordinates_by_city(self, city: str) -> list[City]: ...

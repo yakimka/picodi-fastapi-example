@@ -5,11 +5,18 @@ import sqlite3
 from typing import TYPE_CHECKING, Any
 
 from httpx import AsyncClient
-from picodi import Provide, SingletonScope, dependency, inject
+from picodi import ContextVarScope, Provide, SingletonScope, dependency, inject
+from picodi.helpers import enter
+from redis import asyncio as aioredis
 
-from picodi_app.conf import Settings, SqliteDatabaseSettings, parse_settings
+from picodi_app.conf import (
+    RedisDatabaseSettings,
+    Settings,
+    SqliteDatabaseSettings,
+    parse_settings,
+)
 from picodi_app.data_access.sqlite import create_tables
-from picodi_app.data_access.user import SqliteUserRepository
+from picodi_app.data_access.user import RedisUserRepository, SqliteUserRepository
 from picodi_app.data_access.weather import (
     OpenMeteoGeocoderClient,
     OpenMeteoWeatherClient,
@@ -56,9 +63,26 @@ def get_option(
 
 
 # Picodi Note:
+#   We use `is_db_dormant` to create a function that checks if the database type
+#   of dependency is not the same as the provided type. If database from settings
+#   is not the same as the provided type, than we don't want to initialize
+#   the dependency on app startup.
+#   In most cases we don't need setup like this, but it's good to know that
+#   we can use it if needed.
+def is_db_dormant(type: str) -> Callable[[], bool]:
+    @inject
+    def is_db_dormant_func(
+        db_type: str = Provide(get_option(lambda s: s.database.type)),
+    ) -> bool:
+        return db_type != type
+
+    return is_db_dormant_func
+
+
+# Picodi Note:
 #   Thanks to `SingletonScope` we can use sqlite connection
 #   even with ":memory:" database.
-@dependency(scope_class=SingletonScope)
+@dependency(scope_class=SingletonScope, ignore_manual_init=is_db_dormant("sqlite"))
 @inject
 def get_sqlite_connection(
     db_settings: SqliteDatabaseSettings = Provide(
@@ -80,16 +104,73 @@ def get_sqlite_connection(
 
 
 @inject
-def get_user_repository(
+def get_sqlite_user_repository(
     conn: sqlite3.Connection = Provide(get_sqlite_connection),
-) -> IUserRepository:
+) -> SqliteUserRepository:
     logger.info(
         "Creating SqliteUserRepository instance with connection ID: %s", id(conn)
     )
     return SqliteUserRepository(conn)
 
 
-@dependency(scope_class=SingletonScope)
+@dependency(scope_class=SingletonScope, ignore_manual_init=is_db_dormant("redis"))
+@inject
+async def get_redis_client(
+    db_settings: RedisDatabaseSettings = Provide(
+        get_option(lambda s: s.database.settings)
+    ),
+) -> AsyncGenerator[aioredis.Redis, None]:
+    if not isinstance(db_settings, RedisDatabaseSettings):
+        raise ValueError("Invalid database settings")
+
+    redis = aioredis.from_url(db_settings.url, decode_responses=True)  # type: ignore
+    try:
+        yield redis
+    finally:
+        await redis.aclose()
+
+
+# Picodi Note:
+#   Note that `get_redis_client` is an async dependency, but we inject it
+#   into a sync `get_redis_user_repository` dependency.
+#   It can be done because we use `SingletonScope` and `init_dependencies` function
+#   to initialize dependencies on app startup (see `picodi_app.api.main.lifespan`).
+@inject
+def get_redis_user_repository(
+    redis: aioredis.Redis = Provide(get_redis_client),
+) -> RedisUserRepository:
+    logger.info(
+        "Creating RedisUserRepository instance with connection ID: %s", id(redis)
+    )
+    return RedisUserRepository(redis)
+
+
+@inject
+def get_user_repository(
+    db_type: str = Provide(get_option(lambda s: s.database.type)),
+) -> Generator[IUserRepository, None, None]:
+    # Picodi Note:
+    #   Tricky part here is that we want to inject only one of the repositories - either
+    #   SqliteUserRepository or RedisUserRepository.
+    if db_type == "sqlite":
+        with enter(get_sqlite_user_repository) as repo:
+            yield repo
+    elif db_type == "redis":
+        with enter(get_redis_user_repository) as repo:
+            yield repo
+    else:
+        raise ValueError(f"Unsupported database type: {db_type}")
+
+
+# Picodi Note:
+#   We use `ContextVarScope` to create http client for open-meteo service.
+#   That means that even if will be created multiple repositories or services
+#   that depend on `get_open_meteo_http_client` they will share the same instance
+#   of the http client (across one request).
+#
+#   In real project we would use `httpx.AsyncClient` with connection pooling
+#   and reuse the same instance of the client across multiple requests.
+@dependency(scope_class=ContextVarScope)
 async def get_open_meteo_http_client() -> AsyncGenerator[AsyncClient, None]:
     logger.info("Creating new httpx.AsyncClient instance")
     async with AsyncClient() as client:
@@ -97,20 +178,15 @@ async def get_open_meteo_http_client() -> AsyncGenerator[AsyncClient, None]:
     logger.info("Closing httpx.AsyncClient instance")
 
 
-# Picodi Note:
-#   Note that `get_open_meteo_http_client` is an async dependency, but we inject it
-#   into a sync `get_weather_client` dependency.
-#   It can be done because we use `SingletonScope` and `init_dependencies` function
-#   to initialize dependencies on app startup (see `picodi_app.api.main.lifespan`).
 @inject
-def get_weather_client(
+async def get_weather_client(
     http_client: AsyncClient = Provide(get_open_meteo_http_client),
 ) -> IWeatherClient:
     return OpenMeteoWeatherClient(http_client=http_client)
 
 
 @inject
-def get_geocoder_client(
+async def get_geocoder_client(
     http_client: AsyncClient = Provide(get_open_meteo_http_client),
 ) -> IGeocoderClient:
     return OpenMeteoGeocoderClient(http_client=http_client)

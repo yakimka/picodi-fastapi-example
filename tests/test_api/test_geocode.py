@@ -1,11 +1,11 @@
 import pytest
 
-pytestmark = [pytest.mark.integration, pytest.mark.block_network]
+pytestmark = pytest.mark.integration
 
 
 @pytest.mark.vcr
-def test_can_geocode_city_by_name(api_client):
-    response = api_client.get("/weather/geocode", params={"city": "Kyiv"})
+async def test_can_geocode_city_by_name(api_client):
+    response = await api_client.get("/weather/geocode", params={"city": "Kyiv"})
 
     assert response.status_code == 200, response.text
     check_geocode_resp_data(response.json())

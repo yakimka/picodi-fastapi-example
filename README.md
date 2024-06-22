@@ -64,6 +64,17 @@ You can read all code file by file,
 or you can cherry-pick some parts of the code related to Picodi integration.
 This parts of code are marked with comments like `# Picodi Note:`.
 
+## How to run tests
+
+1. Run redis server:
+   ```bash
+   docker compose up -d redis
+   ```
+2. Run tests:
+    ```bash
+    make test
+    ```
+
 ## License
 
 [MIT](https://github.com/yakimka/picodi-fastapi-example/blob/main/LICENSE)
