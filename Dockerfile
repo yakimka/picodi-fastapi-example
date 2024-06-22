@@ -1,6 +1,6 @@
 FROM python:3.11-slim-bullseye as builder
 
-ARG WHEEL=picodi-fastapi-example-0.1.0-py3-none-any.whl
+ARG WHEEL=picodi_app-0.1.0-py3-none-any.whl
 ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
@@ -35,4 +35,4 @@ ENV PATH="/venv/bin:$PATH"
 WORKDIR /opt/app
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 
-CMD ["python"]
+CMD ["uvicorn", "--factory", "picodi_app.api.main:create_app", "--host=0.0.0.0", "--port=8000"]

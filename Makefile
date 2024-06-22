@@ -1,17 +1,9 @@
 SHELL:=/usr/bin/env bash
 
-RUN=docker compose exec -it devtools
+RUN=
 
 .PHONY: all
 all: help
-
-.PHONY: start-devtools
-start-devtools:  ## Start devtools container
-	docker compose up -d devtools
-
-.PHONY: stop-devtools
-stop-devtools:  ## Stop devtools container
-	docker compose stop devtools
 
 .PHONY: pre-commit
 pre-commit:  ## Run pre-commit with args
@@ -32,7 +24,7 @@ mypy:  ## Run mypy
 
 .PHONY: test
 test:  ## Run tests
-	$(RUN) poetry run pytest --cov=tests --cov=app $(args)
+	$(RUN) poetry run pytest --cov=tests --cov=picodi_app $(args)
 	$(RUN) poetry run pytest --dead-fixtures
 
 .PHONY: package
@@ -44,6 +36,10 @@ package:  ## Run packages (dependencies) checks
 build-package:  ## Build package
 	$(RUN) poetry build $(args)
 	$(RUN) poetry export --format=requirements.txt --output=dist/requirements.txt
+
+.PHONY: build-production-image
+	build-package
+	docker build -t picodi_app_prod .
 
 .PHONY: checks
 checks: lint package test  ## Run linting and tests
