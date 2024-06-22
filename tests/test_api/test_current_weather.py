@@ -2,7 +2,7 @@ import pytest
 
 from picodi_app.weather import WindDirection
 
-pytestmark = [pytest.mark.integration, pytest.mark.block_network]
+pytestmark = pytest.mark.integration
 
 
 async def test_anonymous_cant_get_current_weather_not_specifying_coords(api_client):

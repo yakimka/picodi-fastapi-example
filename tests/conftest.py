@@ -1,8 +1,15 @@
+import os
+
 import picodi
 import pytest
 from picodi.helpers import enter, lifespan
 
-from picodi_app.conf import DatabaseSettings, Settings, SqliteDatabaseSettings
+from picodi_app.conf import (
+    DatabaseSettings,
+    RedisDatabaseSettings,
+    Settings,
+    SqliteDatabaseSettings,
+)
 from picodi_app.deps import get_settings, get_user_repository
 from picodi_app.weather import Coordinates
 
@@ -22,17 +29,35 @@ def vcr_config():
     }
 
 
-@pytest.fixture()
-def settings_for_tests():
-    return Settings(
-        database=DatabaseSettings(
+# Run tests with different database types.
+#   In real project i'd stick with only sqlite memory for tests
+#   or even mock the repository. It's faster and more reliable, repositories
+#   are usually tested separately with real databases or services.
+#   But for the sake of the example
+#   i'll show how to run tests with different database types.
+@pytest.fixture(params=["sqlite", "redis"])
+def settings_for_tests(request):
+    if request.param == "sqlite":
+        db_settings = DatabaseSettings(
             type="sqlite",
             settings=SqliteDatabaseSettings(
                 db_name=":memory:",
                 create_db=True,
             ),
         )
-    )
+    elif request.param == "redis":
+        # Dirty hack to get the redis url from the environment variable.
+        url = os.getenv("DATABASE__SETTINGS__URL", "redis://localhost:6379/1")
+        db_settings = DatabaseSettings(
+            type="redis",
+            settings=RedisDatabaseSettings(
+                url=url,
+            ),
+        )
+    else:
+        raise ValueError(f"Unsupported database type: {request.param}")
+
+    return Settings(database=db_settings)
 
 
 @pytest.fixture(autouse=True)

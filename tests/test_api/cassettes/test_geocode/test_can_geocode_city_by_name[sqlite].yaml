@@ -1,0 +1,46 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - geocoding-api.open-meteo.com
+      user-agent:
+      - python-httpx/0.27.0
+    method: GET
+    uri: https://geocoding-api.open-meteo.com/v1/search?name=Kyiv&count=10&language=en&format=json
+  response:
+    body:
+      string: !!binary |
+        eJytlU2P2jAQhv8K8jlK/e2YG932sNqVilbqpVWF3MVdLEIcOQ4SrPjvnbDAyoGiluboV56xn3c8
+        41cUbNOWsUHj76/IzdFYYcZ5kaHKrCwao4eNW6MMlSa62M5BETjngksJmq9eDiLDuaAMomxp17DV
+        V2hMCpXjDP2yJrbBzp59txFNp493kO/Zt1UMm6P6dQKama9cRWanS6gMRbeyW191Wz63wdf2w4Oz
+        3X1qX7fl4SCqtBKCvSftMkiNlSYnrTtjGYyDVMeDDnCjOxc3aJe90RMipORaJPxLkzjAZU6J1KkB
+        FAzQiqQO0MsG/A2/5Jxe4f931IUNja9GX36WpoknXoWFIjihbZY2xS1ywpjq8YpcaHAh5QVnbgbW
+        muohgT9Vru4SxOAB6SJ3+sotNEHCrXPOSJFyU55jJguacFMhbuemgg/K/biGhj1iFpJhyYqr9YWG
+        ZlSzXn1ZrrEmvfcMltzIKbWUjA/JOfVlNGvTL6yGsUOovP6iVa6F6newyLXei0kH3/yiZQHJLlb2
+        m6l98NvFxt7CvY922wXEn8FDtbGWaTuPJi5ARDwb4vhshoHItUoNUMUFAyb3T9MBhvgA83pPLGhK
+        /NGHTVO7cnRfRRuqPYop/2QE46JvQ6G5SlucgPpfPsiDRN8kQqQohrbmuKawPnnwZDqA3Y8MvdjK
+        hj1Pd+xsBX8+fNuSgH9y9xt06II8
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - deflate
+      Content-Length:
+      - '534'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Sat, 22 Jun 2024 21:50:08 GMT
+      X-Encoding-Time:
+      - 0.004708766937255859 ms
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -1,6 +1,6 @@
 import pytest
 
-pytestmark = [pytest.mark.integration, pytest.mark.block_network]
+pytestmark = pytest.mark.integration
 
 
 @pytest.mark.vcr

@@ -57,7 +57,6 @@ jobs:
 
       - name: Prepare Docker
         run: |
-          cp .env.template .env
           docker login "$CACHE_REGISTRY" -u "$CACHE_REGISTRY_USERNAME" --password="${CACHE_REGISTRY_TOKEN}"
           docker buildx create --use --driver=docker-container
           docker --version && docker compose --version
@@ -81,7 +80,10 @@ jobs:
           docker tag ${DEV_IMAGE} ${PROJECT_NAME}:dev
 
       - name: Run checks
-        run: docker compose run -e CI=1 --user=$(id -u) --rm devtools ./ci.sh
+        run: |
+          docker compose up -d redis
+          docker compose run -e CI=1 -e DATABASE__SETTINGS__URL="redis://redis:6379/3" --user=$(id -u) --rm devtools ./ci.sh
+          docker compose down
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4.5.0
@@ -115,7 +117,6 @@ jobs:
 
       - name: Prepare Docker
         run: |
-          cp .env.template .env
           docker login "$REGISTRY" -u "$REGISTRY_USERNAME" --password="${REGISTRY_TOKEN}"
           docker buildx create --use --driver=docker-container
           docker --version && docker compose --version
