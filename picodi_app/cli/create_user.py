@@ -15,6 +15,8 @@ if TYPE_CHECKING:
     from collections.abc import Coroutine
 
 
+# Picodi Note:
+#   With Picodi you can use same dependencies in CLI and API code.
 @inject
 async def create_user(
     email: str,

@@ -17,6 +17,12 @@ if TYPE_CHECKING:
 logging.basicConfig(level=logging.INFO)
 
 
+# Picodi Note:
+#   The lifespan context manager is used to initialize dependencies on app startup and
+#   close them on app shutdown.
+#   This is needed for properly closing connections, releasing resources, etc.
+#   But more importantly, it allows to inject async dependencies in sync functions,
+#   this can be done if async dependency are scoped with `SingletonScope` or similar.
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     await picodi.init_dependencies()
@@ -46,10 +52,16 @@ def create_app() -> FastAPI:
     return app
 
 
+# Picodi Note:
+#   This middleware is used to manage request-scoped dependencies.
+#   It initializes and closes dependencies on each request.
+#   This is needed for properly closing connections, releasing resources, etc.
+#   It also allows to inject async dependencies in sync functions.
+#   In this example, we use `ContextVarScope` to manage request-scoped dependencies.
+#   But you can use any other scope that fits your needs.
 async def manage_request_scoped_deps(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
-    print("middleware")
     await picodi.init_dependencies(scope_class=ContextVarScope)
     response = await call_next(request)
     await picodi.shutdown_dependencies(scope_class=ContextVarScope)
