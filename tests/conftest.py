@@ -1,6 +1,6 @@
 import picodi
 import pytest
-from picodi.helpers import enter
+from picodi.helpers import enter, lifespan
 
 from picodi_app.conf import DatabaseSettings, Settings, SqliteDatabaseSettings
 from picodi_app.deps import get_settings, get_user_repository
@@ -17,7 +17,7 @@ def mother():
 @pytest.fixture(autouse=True)
 def vcr_config():
     return {
-        "ignore_hosts": ["testserver", "test", "localhost"],
+        "ignore_hosts": ["testserver", "test"],
         "ignore_localhost": True,
     }
 
@@ -38,9 +38,8 @@ def settings_for_tests():
 @pytest.fixture(autouse=True)
 async def _override_deps(settings_for_tests):
     with picodi.registry.override(get_settings, lambda: settings_for_tests):
-        await picodi.init_dependencies()
-        yield
-        await picodi.shutdown_dependencies()
+        async with lifespan():
+            yield
 
 
 @pytest.fixture()
