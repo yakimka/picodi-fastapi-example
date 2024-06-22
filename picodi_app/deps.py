@@ -62,14 +62,21 @@ def get_option(
     return get_option_inner
 
 
+# Picodi Note:
+#   We use `is_db_dormant` to create a function that checks if the database type
+#   of dependency is not the same as the provided type. If database from settings
+#   is not the same as the provided type, than we don't want to initialize
+#   the dependency on app startup.
+#   In most cases we don't need setup like this, but it's good to know that
+#   we can use it if needed.
 def is_db_dormant(type: str) -> Callable[[], bool]:
     @inject
-    def is_db_active_func(
+    def is_db_dormant_func(
         db_type: str = Provide(get_option(lambda s: s.database.type)),
     ) -> bool:
         return db_type != type
 
-    return is_db_active_func
+    return is_db_dormant_func
 
 
 # Picodi Note:
@@ -133,11 +140,13 @@ def get_redis_user_repository(
     return RedisUserRepository(redis)
 
 
-# @dependency(scope_class=SingletonScope, ignore_manual_init=True)
 @inject
 def get_user_repository(
     db_type: str = Provide(get_option(lambda s: s.database.type)),
 ) -> Generator[IUserRepository, None, None]:
+    # Picodi Note:
+    #   Tricky part here is that we want to inject only one of the repositories - either
+    #   SqliteUserRepository or RedisUserRepository.
     if db_type == "sqlite":
         with enter(get_sqlite_user_repository) as repo:
             yield repo
