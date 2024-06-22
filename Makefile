@@ -37,6 +37,10 @@ build-package:  ## Build package
 	$(RUN) poetry build $(args)
 	$(RUN) poetry export --format=requirements.txt --output=dist/requirements.txt
 
+.PHONY: build-production-image
+	build-package
+	docker build -t picodi_app_prod .
+
 .PHONY: checks
 checks: lint package test  ## Run linting and tests
 
