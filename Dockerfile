@@ -35,4 +35,4 @@ ENV PATH="/venv/bin:$PATH"
 WORKDIR /opt/app
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 
-CMD ["python"]
+CMD ["uvicorn", "--factory", "picodi_app.api.main:create_app", "--host=0.0.0.0", "--port=8000"]
