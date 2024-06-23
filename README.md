@@ -19,7 +19,9 @@ but rather an example of how to use Picodi with FastAPI.
 
 ## How to run the project
 
-### Local installation
+### Installation
+
+#### Local installation
 
 1. Clone this repository:
 2. Install dependencies with poetry:
@@ -32,13 +34,23 @@ but rather an example of how to use Picodi with FastAPI.
    ```
 4. Open the browser and go to [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### Docker
+#### Docker
 
 1. Spin up the container:
     ```bash
     docker run --rm -p 8000:8000 yakimka/picodi-fastapi-example:latest
     ```
 2. Open the browser and go to [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### CLI Commands
+
+You can see all available CLI commands in `picodi_app.cli` module.
+
+To run the CLI command, use the following:
+
+```bash
+python -m picodi_app.cli <command>  # you must be in active virtual environment
+```
 
 ## How to read the code
 
