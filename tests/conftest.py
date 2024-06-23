@@ -3,7 +3,7 @@ import pytest
 from picodi.helpers import enter, lifespan
 
 from picodi_app.conf import DatabaseSettings, Settings, SqliteDatabaseSettings
-from picodi_app.deps import get_settings, get_user_repository
+from picodi_app.deps import get_redis_client, get_settings, get_user_repository
 from picodi_app.weather import Coordinates
 
 from .object_mother import ObjectMother
@@ -45,6 +45,17 @@ async def _override_deps(settings_for_tests):
     #   will be closed after each test.
     with picodi.registry.override(get_settings, lambda: settings_for_tests):
         async with lifespan():
+            yield
+
+
+# Fixture for clearing the Redis database after each test
+@pytest.fixture(autouse=True)
+async def _clear_redis(_override_deps, settings_for_tests):
+    if settings_for_tests.database.type != "redis":
+        yield
+    else:
+        async with enter(get_redis_client) as redis:
+            await redis.flushdb()
             yield
 
 
