@@ -92,7 +92,9 @@ def get_sqlite_connection(
     if not isinstance(db_settings, SqliteDatabaseSettings):
         raise ValueError("Invalid database settings")
     conn = sqlite3.connect(db_settings.db_name, check_same_thread=False)
-    logger.info("Connected to SQLite database. ID: %s", id(conn))
+    logger.info(
+        "Connected to SQLite database. ID: %s. Must be closed on app shutdown", id(conn)
+    )
     if db_settings.create_db:
         create_tables(conn)
         logger.info("Created tables in SQLite database")
@@ -124,10 +126,13 @@ async def get_redis_client(
         raise ValueError("Invalid database settings")
 
     redis = aioredis.from_url(db_settings.url, decode_responses=True)  # type: ignore
-    try:
-        yield redis
-    finally:
-        await redis.aclose()
+    async with redis as conn:
+        logger.info(
+            "Connected to Redis database. ID: %s. Must be closed on app shutdown",
+            id(conn),
+        )
+        yield conn
+        logger.info("Closed Redis connection. ID: %s", id(conn))
 
 
 # Picodi Note:
@@ -172,16 +177,23 @@ def get_user_repository(
 #   and reuse the same instance of the client across multiple requests.
 @dependency(scope_class=ContextVarScope)
 async def get_open_meteo_http_client() -> AsyncGenerator[AsyncClient, None]:
-    logger.info("Creating new httpx.AsyncClient instance")
     async with AsyncClient() as client:
+        logger.info(
+            "Creating new httpx.AsyncClient. ID: %s. Must be closed on end of request",
+            id(client),
+        )
         yield client
-    logger.info("Closing httpx.AsyncClient instance")
+        logger.info("Closing httpx.AsyncClient instance. ID: %s", id(client))
 
 
 @inject
 async def get_weather_client(
     http_client: AsyncClient = Provide(get_open_meteo_http_client),
 ) -> IWeatherClient:
+    logger.info(
+        "Creating OpenMeteoWeatherClient instance with http client ID: %s",
+        id(http_client),
+    )
     return OpenMeteoWeatherClient(http_client=http_client)
 
 
@@ -189,4 +201,8 @@ async def get_weather_client(
 async def get_geocoder_client(
     http_client: AsyncClient = Provide(get_open_meteo_http_client),
 ) -> IGeocoderClient:
+    logger.info(
+        "Creating OpenMeteoGeocoderClient instance with http client ID: %s",
+        id(http_client),
+    )
     return OpenMeteoGeocoderClient(http_client=http_client)
