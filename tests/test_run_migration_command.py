@@ -7,26 +7,21 @@ from picodi_app.deps import get_sqlite_connection
 
 
 @pytest.fixture()
-def settings_for_tests(settings_for_tests):
+def settings_for_tests(settings_for_tests, tmpdir):
     settings_for_tests.database.type = "sqlite"
     settings_for_tests.database.settings = SqliteDatabaseSettings(
-        db_name=":memory:",
+        db_name=str(tmpdir / "db.sqlite"),
         create_db=False,
     )
     return settings_for_tests
 
 
-@pytest.fixture()
-def sqlite_conn():
-    with enter(get_sqlite_connection) as conn:
-        yield conn
-
-
-def test_run_migration_command(sqlite_conn):
+def test_run_migration_command():
     migrate_main()
 
-    cursor = sqlite_conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = cursor.fetchall()
+    with enter(get_sqlite_connection) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
 
     assert ("users",) in tables
