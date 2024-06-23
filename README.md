@@ -47,16 +47,15 @@ The project is divided into several parts:
 1. `picodi_app` - the main package of the project.
 2. `picodi_app.conf` - application configuration.
 3. `picodi_app.cli` - the CLI commands.
-4. `picodi_app.workers` - the background workers.
-5. `picodi_app.deps` - Picodi dependencies.
+4. `picodi_app.deps` - Picodi dependencies.
    DB connections, http clients, all dependencies
    that can be used not only in HTTP-related code but in any part of the application
    like CLI commands or background workers.
-6. `picodi_app.api` - the FastAPI application. All FastAPI-related code is here.
-7. `picodi_app.api.fastapi-deps` - FastAPI dependencies. This is FastAPI\HTTP related dependencies.
-8. `picodi_app.data_access` - the data access layer.
+5. `picodi_app.api` - the FastAPI application. All FastAPI-related code is here.
+6. `picodi_app.api.fastapi-deps` - FastAPI dependencies. This is FastAPI\HTTP related dependencies.
+7. `picodi_app.data_access` - the data access layer.
    All interactions with the database and external services are here.
-9. `picodi_app.user`, `picodi_app.weather` - "business logic" modules.
+8. `picodi_app.user`, `picodi_app.weather` - "business logic" modules.
    Usually this code is in the `domain` package,
    but I decided to put it in the root package for simplicity.
 
