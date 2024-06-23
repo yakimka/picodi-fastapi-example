@@ -28,7 +28,7 @@ but rather an example of how to use Picodi with FastAPI.
    ```
 3. Run the project with poetry:
    ```bash
-   poetry run uvicorn --factory app.api.main:create_app --host=0.0.0.0 --port=8000 --reload
+   poetry run uvicorn --factory app.api.main:create_app --host=0.0.0.0 --port=8000
    ```
 4. Open the browser and go to [http://localhost:8000/docs](http://localhost:8000/docs)
 
