@@ -1,7 +1,8 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from picodi import Provide, inject
+from picodi import inject
+from picodi.integrations.fastapi import Provide
 from pydantic import BaseModel, Field
 from starlette import status
 
@@ -67,7 +68,7 @@ class WeatherResp(BaseModel):
         )
 
 
-def get_coordinates(
+async def get_coordinates(
     user: Annotated[User | None, Depends(get_current_user)],
     latitude: Annotated[float | None, Query(example=50.45466)] = None,
     longitude: Annotated[float | None, Query(example=30.5238)] = None,
@@ -93,7 +94,7 @@ def get_coordinates(
 @inject
 async def get_current_weather(
     coords: Coordinates = Depends(get_coordinates),
-    weather_client: IWeatherClient = Depends(Provide(get_weather_client)),
+    weather_client: IWeatherClient = Provide(get_weather_client, wrap=True),
 ) -> WeatherResp:
     weather = await weather_client.get_current_weather(coords)
     return WeatherResp.from_domain(weather)
@@ -118,7 +119,7 @@ class ForecastResp(BaseModel):
 async def get_forecast(
     coords: Coordinates = Depends(get_coordinates),
     days: Annotated[int, Query(..., ge=1, le=7)] = 1,
-    weather_client: IWeatherClient = Depends(Provide(get_weather_client)),
+    weather_client: IWeatherClient = Provide(get_weather_client, wrap=True),
 ) -> ForecastResp:
     forecast = await weather_client.get_forecast(coords, days=days)
     time_data = []
@@ -137,7 +138,7 @@ async def get_forecast(
 @inject
 async def geocode(
     city: Annotated[str, Query(..., example="Kyiv")],
-    geocoder_client: IGeocoderClient = Depends(Provide(get_geocoder_client)),
+    geocoder_client: IGeocoderClient = Provide(get_geocoder_client, wrap=True),
 ) -> list[CityResp]:
     results = await geocoder_client.get_coordinates_by_city(city)
     return [CityResp.from_domain(city) for city in results]

@@ -6,6 +6,9 @@ from contextlib import asynccontextmanager
 from functools import partial, wraps
 from typing import ParamSpec, TypeVar
 
+import anyio
+from anyio.to_thread import current_default_thread_limiter
+
 T = TypeVar("T")
 P = ParamSpec("P")
 
@@ -46,3 +49,14 @@ async def rewrite_error(
         yield
     except error as e:
         raise new_error from e
+
+
+async def monitor_thread_limiter() -> None:
+    # https://github.com/Kludex/fastapi-tips
+    limiter = current_default_thread_limiter()
+    threads_in_use = limiter.borrowed_tokens
+    while True:
+        if threads_in_use != limiter.borrowed_tokens:
+            print(f"Threads in use: {limiter.borrowed_tokens}")
+            threads_in_use = limiter.borrowed_tokens
+        await anyio.sleep(0)  # noqa: ASYNC115

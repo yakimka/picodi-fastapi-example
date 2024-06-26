@@ -5,8 +5,9 @@ import sqlite3
 from typing import TYPE_CHECKING, Any
 
 from httpx import AsyncClient
-from picodi import ContextVarScope, Provide, SingletonScope, dependency, inject
+from picodi import SingletonScope, dependency, inject
 from picodi.helpers import enter
+from picodi.integrations.fastapi import Provide, RequestScope
 from redis import asyncio as aioredis
 
 from picodi_app.conf import (
@@ -168,14 +169,14 @@ def get_user_repository(
 
 
 # Picodi Note:
-#   We use `ContextVarScope` to create http client for open-meteo service.
+#   We use `RequestScope` to create http client for open-meteo service.
 #   That means that even if will be created multiple repositories or services
 #   that depend on `get_open_meteo_http_client` they will share the same instance
 #   of the http client (across one request).
 #
 #   In real project we would use `httpx.AsyncClient` with connection pooling
 #   and reuse the same instance of the client across multiple requests.
-@dependency(scope_class=ContextVarScope)
+@dependency(scope_class=RequestScope)
 async def get_open_meteo_http_client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient() as client:
         logger.info(

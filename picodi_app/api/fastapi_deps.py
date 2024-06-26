@@ -24,7 +24,8 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from picodi import Provide, inject
+from picodi import inject
+from picodi.integrations.fastapi import Provide
 
 from picodi_app.deps import get_user_repository
 from picodi_app.user import IUserRepository, User
