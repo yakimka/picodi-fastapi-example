@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
 
+import anyio
 import picodi
-from fastapi import APIRouter, FastAPI, Request, Response
-from picodi import ContextVarScope
+from fastapi import APIRouter, FastAPI
+from picodi.integrations.fastapi import RequestScopeMiddleware
+from starlette.middleware import Middleware
 
 from picodi_app.api.routes import users, weather
+from picodi_app.utils import monitor_thread_limiter
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
@@ -46,26 +48,27 @@ def create_app() -> FastAPI:
         title="Weather App",
         description="Example Weather App API with Picodi and FastAPI",
         lifespan=lifespan,
+        # Picodi Note:
+        #   The RequestScopeMiddleware is used to manage a scopes for each request.
+        middleware=[Middleware(RequestScopeMiddleware)],
     )
     app.include_router(create_api_router())
-    app.middleware("http")(manage_request_scoped_deps)
     return app
 
 
-# Picodi Note:
-#   This middleware is used to manage request-scoped dependencies.
-#   It initializes and closes dependencies on each request.
-#   This is needed for properly closing connections, releasing resources, etc.
-#   It also allows to inject async dependencies in sync functions.
-#   In this example, we use `ContextVarScope` to manage request-scoped dependencies.
-#   But you can use any other scope that fits your needs.
-async def manage_request_scoped_deps(
-    request: Request, call_next: Callable[[Request], Awaitable[Response]]
-) -> Response:
-    await picodi.init_dependencies(scope_class=ContextVarScope)
-    response = await call_next(request)
-    await picodi.shutdown_dependencies(scope_class=ContextVarScope)
-    return response
-
-
 # uvicorn --factory picodi_app.api.main:create_app --host=0.0.0.0 --port=8000 --reload
+
+
+if __name__ == "__main__":
+    # Code under this `if` is for my testing purposes only
+    import uvicorn
+
+    config = uvicorn.Config(app="picodi_app.api.main:create_app", factory=True)
+    server = uvicorn.Server(config)
+
+    async def main() -> None:
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(monitor_thread_limiter)
+            await server.serve()
+
+    anyio.run(main)
