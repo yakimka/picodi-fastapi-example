@@ -37,7 +37,7 @@ def test_cant_create_user_with_invalid_coords(invalid_coords):
 async def test_can_create_user_from_cli_and_use_it_in_api(api_client):
     await create_user_main(["me@me.com", "mypassword", "50.45466,30.5238"])
 
-    async with lifespan():
+    async with lifespan.async_():
         response = await api_client.get(
             "/users/whoami", auth=("me@me.com", "mypassword")
         )

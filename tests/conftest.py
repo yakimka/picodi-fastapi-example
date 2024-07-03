@@ -44,7 +44,7 @@ async def _override_deps(settings_for_tests):
     #   Also we need to override the lifespan to ensure that all connections
     #   will be closed after each test.
     with picodi.registry.override(get_settings, lambda: settings_for_tests):
-        async with lifespan():
+        async with lifespan.async_():
             yield
 
 
