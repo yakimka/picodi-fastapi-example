@@ -64,26 +64,26 @@ def get_option(
 
 
 # Picodi Note:
-#   We use `is_db_dormant` to create a function that checks if the database type
-#   of dependency is not the same as the provided type. If database from settings
-#   is not the same as the provided type, than we don't want to initialize
+#   We use `is_db_active` to create a function that checks if the database type
+#   of dependency is the same as the provided type. If database from settings
+#   is the same as the provided type, than we want to initialize
 #   the dependency on app startup.
 #   In most cases we don't need setup like this, but it's good to know that
 #   we can use it if needed.
-def is_db_dormant(type: str) -> Callable[[], bool]:
+def is_db_active(type: str) -> Callable[[], bool]:
     @inject
-    def is_db_dormant_func(
+    def is_db_active_func(
         db_type: str = Provide(get_option(lambda s: s.database.type)),
     ) -> bool:
-        return db_type != type
+        return db_type == type
 
-    return is_db_dormant_func
+    return is_db_active_func
 
 
 # Picodi Note:
 #   Thanks to `SingletonScope` we can use sqlite connection
 #   even with ":memory:" database.
-@dependency(scope_class=SingletonScope, ignore_manual_init=is_db_dormant("sqlite"))
+@dependency(scope_class=SingletonScope, use_init_hook=is_db_active("sqlite"))
 @inject
 def get_sqlite_connection(
     db_settings: SqliteDatabaseSettings = Provide(
@@ -116,7 +116,7 @@ def get_sqlite_user_repository(
     return SqliteUserRepository(conn)
 
 
-@dependency(scope_class=SingletonScope, ignore_manual_init=is_db_dormant("redis"))
+@dependency(scope_class=SingletonScope, use_init_hook=is_db_active("redis"))
 @inject
 async def get_redis_client(
     db_settings: RedisDatabaseSettings = Provide(
@@ -178,7 +178,7 @@ def get_user_repository(
 #   and reuse the same instance of the client across multiple requests.
 @dependency(scope_class=RequestScope)
 async def get_open_meteo_http_client() -> AsyncGenerator[AsyncClient, None]:
-    async with AsyncClient() as client:
+    async with AsyncClient(timeout=5) as client:
         logger.info(
             "Creating new httpx.AsyncClient. ID: %s. Must be closed on end of request",
             id(client),
