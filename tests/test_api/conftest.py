@@ -51,5 +51,7 @@ def fastapi_app() -> FastAPI:
 
 @pytest.fixture()
 async def api_client(fastapi_app) -> AsyncClient:
-    async with AsyncClient(app=fastapi_app, base_url="http://test/api") as client:
+    async with AsyncClient(
+        app=fastapi_app, base_url="http://test/api", timeout=1
+    ) as client:
         yield client

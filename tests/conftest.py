@@ -1,12 +1,23 @@
 import picodi
 import pytest
-from picodi.helpers import enter, lifespan
+from picodi.helpers import enter
 
 from picodi_app.conf import DatabaseSettings, Settings, SqliteDatabaseSettings
 from picodi_app.deps import get_redis_client, get_settings, get_user_repository
 from picodi_app.weather import Coordinates
 
 from .object_mother import ObjectMother
+
+pytest_plugins = [
+    "picodi.integrations._pytest",
+    "picodi.integrations._pytest_asyncio",
+]
+
+
+def pytest_collection_modifyitems(items):
+    for item in items:
+        if "/test_api/" in str(item.fspath):
+            item.add_marker(pytest.mark.picodi_init_dependencies)
 
 
 @pytest.fixture()
@@ -35,28 +46,20 @@ def settings_for_tests():
     )
 
 
-@pytest.fixture(autouse=True)
-async def _override_deps(settings_for_tests):
-    # Picodi Note:
-    #   We need to override the settings for tests to ensure that our local settings
-    #   won't interfere with the tests. We also need to ensure that the database
-    #   will be created in memory.
-    #   Also we need to override the lifespan to ensure that all connections
-    #   will be closed after each test.
-    with picodi.registry.override(get_settings, lambda: settings_for_tests):
-        async with lifespan.async_():
-            yield
+# Picodi Note:
+#   We need to override the settings for tests to ensure that our local settings
+#   won't interfere with the tests.
+@pytest.fixture()
+def picodi_overrides(settings_for_tests):
+    return [(get_settings, lambda: settings_for_tests)]
 
 
 # Fixture for clearing the Redis database after each test
 @pytest.fixture(autouse=True)
-async def _clear_redis(_override_deps, settings_for_tests):
-    if settings_for_tests.database.type != "redis":
-        yield
-    else:
+async def _clear_redis():
+    if get_redis_client in picodi.registry.touched:
         async with enter(get_redis_client) as redis:
             await redis.flushdb()
-            yield
 
 
 @pytest.fixture()
