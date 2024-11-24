@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from picodi import inject
 from picodi.integrations.fastapi import Provide
 from pydantic import BaseModel, Field
 from starlette import status
@@ -91,7 +90,6 @@ async def get_coordinates(
         "For anonymous users, it requires latitude and longitude"
     ),
 )
-@inject
 async def get_current_weather(
     coords: Coordinates = Depends(get_coordinates),
     weather_client: IWeatherClient = Provide(get_weather_client, wrap=True),
@@ -115,7 +113,6 @@ class ForecastResp(BaseModel):
         "For anonymous users, it requires latitude and longitude"
     ),
 )
-@inject
 async def get_forecast(
     coords: Coordinates = Depends(get_coordinates),
     days: Annotated[int, Query(..., ge=1, le=7)] = 1,
@@ -135,7 +132,6 @@ async def get_forecast(
     "/geocode",
     description="Get city coordinates by city name",
 )
-@inject
 async def geocode(
     city: Annotated[str, Query(..., example="Kyiv")],
     geocoder_client: IGeocoderClient = Provide(get_geocoder_client, wrap=True),

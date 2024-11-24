@@ -49,7 +49,7 @@ You can see all available CLI commands in `picodi_app.cli` module.
 To run the CLI command, use the following:
 
 ```bash
-python -m picodi_app.cli <command>  # you must be in active virtual environment
+python -m picodi_app.cli.<command>  # you must be in active virtual environment
 ```
 
 ## How to read the code

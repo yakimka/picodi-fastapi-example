@@ -24,7 +24,6 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from picodi import inject
 from picodi.integrations.fastapi import Provide
 
 from picodi_app.deps import get_user_repository
@@ -34,15 +33,9 @@ from picodi_app.utils import verify_password
 security = HTTPBasic()
 
 
-@inject
 async def get_current_user(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
-    # Picodi Note:
-    #   you can use Picodi dependencies in FastAPI views by providing them with
-    #   `Provide` and wrapping views with `inject`.
-    #   This way, you can use the same dependencies in other parts of
-    #   your application.
-    user_repo: IUserRepository = Depends(Provide(get_user_repository)),
+    user_repo: IUserRepository = Provide(get_user_repository, wrap=True),
 ) -> User | None:
     user = await user_repo.get_user_by_email(credentials.username)
     if user is None:
