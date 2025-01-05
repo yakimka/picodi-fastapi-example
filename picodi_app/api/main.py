@@ -11,6 +11,7 @@ from picodi.integrations.fastapi import RequestScopeMiddleware
 from starlette.middleware import Middleware
 
 from picodi_app.api.routes import users, weather
+from picodi_app.deps import dependencies_for_init
 from picodi_app.utils import monitor_thread_limiter
 
 if TYPE_CHECKING:
@@ -27,7 +28,7 @@ logging.basicConfig(level=logging.INFO)
 #   this can be done if async dependency are scoped with `SingletonScope` or similar.
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
-    await picodi.init_dependencies()
+    await picodi.init_dependencies(dependencies=dependencies_for_init)
     try:
         yield
     finally:

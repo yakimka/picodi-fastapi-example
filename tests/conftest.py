@@ -3,7 +3,12 @@ import pytest
 from picodi.helpers import enter
 
 from picodi_app.conf import DatabaseSettings, Settings, SqliteDatabaseSettings
-from picodi_app.deps import get_redis_client, get_settings, get_user_repository
+from picodi_app.deps import (
+    dependencies_for_init,
+    get_redis_client,
+    get_settings,
+    get_user_repository,
+)
 from picodi_app.weather import Coordinates
 
 from .object_mother import ObjectMother
@@ -17,7 +22,9 @@ pytest_plugins = [
 def pytest_collection_modifyitems(items):
     for item in items:
         if "/test_api/" in str(item.fspath):
-            item.add_marker(pytest.mark.picodi_init_dependencies)
+            item.add_marker(
+                pytest.mark.picodi_init_dependencies(dependencies=dependencies_for_init)
+            )
 
 
 @pytest.fixture()
