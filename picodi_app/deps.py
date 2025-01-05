@@ -64,26 +64,9 @@ def get_option(
 
 
 # Picodi Note:
-#   We use `is_db_active` to create a function that checks if the database type
-#   of dependency is the same as the provided type. If database from settings
-#   is the same as the provided type, than we want to initialize
-#   the dependency on app startup.
-#   In most cases we don't need setup like this, but it's good to know that
-#   we can use it if needed.
-def is_db_active(type: str) -> Callable[[], bool]:
-    @inject
-    def is_db_active_func(
-        db_type: str = Provide(get_option(lambda s: s.database.type)),
-    ) -> bool:
-        return db_type == type
-
-    return is_db_active_func
-
-
-# Picodi Note:
 #   Thanks to `SingletonScope` we can use sqlite connection
 #   even with ":memory:" database.
-@dependency(scope_class=SingletonScope, use_init_hook=is_db_active("sqlite"))
+@dependency(scope_class=SingletonScope)
 @inject
 def get_sqlite_connection(
     db_settings: SqliteDatabaseSettings = Provide(
@@ -116,7 +99,7 @@ def get_sqlite_user_repository(
     return SqliteUserRepository(conn)
 
 
-@dependency(scope_class=SingletonScope, use_init_hook=is_db_active("redis"))
+@dependency(scope_class=SingletonScope)
 @inject
 async def get_redis_client(
     db_settings: RedisDatabaseSettings = Provide(
@@ -207,3 +190,19 @@ async def get_geocoder_client(
         id(http_client),
     )
     return OpenMeteoGeocoderClient(http_client=http_client)
+
+
+# Picodi Note:
+#   We can use `init_dependencies` function to initialize dependencies on app startup.
+#   In this example we use it to initialize database connection and redis client
+#   on app startup depending on the database type from settings.
+#   In most cases we don't need setup like this, but it's good to know that
+#   we can use it if needed.
+@inject
+def dependencies_for_init(
+    db_type: str = Provide(get_option(lambda s: s.database.type)),
+) -> list[Callable]:
+    if db_type == "redis":
+        return [get_redis_client]
+
+    return []
