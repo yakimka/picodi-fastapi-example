@@ -1,6 +1,6 @@
 import picodi
 import pytest
-from picodi.helpers import enter
+from picodi.helpers import resolve
 
 from picodi_app.conf import DatabaseSettings, Settings, SqliteDatabaseSettings
 from picodi_app.deps import (
@@ -65,17 +65,17 @@ def picodi_overrides(settings_for_tests):
 @pytest.fixture(autouse=True)
 async def _clear_redis():
     if get_redis_client in picodi.registry.touched:
-        async with enter(get_redis_client) as redis:
+        async with resolve(get_redis_client) as redis:
             await redis.flushdb()
 
 
 @pytest.fixture()
 def user_repository():
     # Picodi Note:
-    #   We need to use the `enter` context manager to resolve the dependencies
+    #   We need to use the `resolve` context manager to resolve the dependencies
     #   in the `user_repository` fixture, because we can't use `inject` decorator
     #   in fixtures.
-    with enter(get_user_repository) as user_repo:
+    with resolve(get_user_repository) as user_repo:
         yield user_repo
 
 

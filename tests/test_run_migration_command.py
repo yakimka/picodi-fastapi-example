@@ -1,5 +1,5 @@
 import pytest
-from picodi.helpers import enter
+from picodi.helpers import resolve
 
 from picodi_app.cli.migrate import main as migrate_main
 from picodi_app.conf import SqliteDatabaseSettings
@@ -19,7 +19,7 @@ def settings_for_tests(settings_for_tests, tmpdir):
 def test_run_migration_command():
     migrate_main()
 
-    with enter(get_sqlite_connection) as conn:
+    with resolve(get_sqlite_connection) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()

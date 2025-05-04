@@ -5,8 +5,8 @@ import sqlite3
 from typing import TYPE_CHECKING, Any
 
 from httpx import AsyncClient
-from picodi import SingletonScope, dependency, inject
-from picodi.helpers import enter
+from picodi import Registry, SingletonScope, inject, registry
+from picodi.helpers import resolve
 from picodi.integrations.fastapi import Provide, RequestScope
 from redis import asyncio as aioredis
 
@@ -32,9 +32,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+cli_registry = Registry()
+
+
 # Picodi Note:
 #   We use `SingletonScope` to create a single instance of the Settings object.
-@dependency(scope_class=SingletonScope)
+@registry.set_scope(scope_class=SingletonScope)
+@cli_registry.set_scope(scope_class=SingletonScope)
 def get_settings() -> Settings:
     return parse_settings()
 
@@ -66,7 +70,8 @@ def get_option(
 # Picodi Note:
 #   Thanks to `SingletonScope` we can use sqlite connection
 #   even with ":memory:" database.
-@dependency(scope_class=SingletonScope)
+@registry.set_scope(scope_class=SingletonScope)
+@cli_registry.set_scope(scope_class=SingletonScope)
 @inject
 def get_sqlite_connection(
     db_settings: SqliteDatabaseSettings = Provide(
@@ -99,7 +104,8 @@ def get_sqlite_user_repository(
     return SqliteUserRepository(conn)
 
 
-@dependency(scope_class=SingletonScope)
+@registry.set_scope(scope_class=SingletonScope)
+@cli_registry.set_scope(scope_class=SingletonScope)
 @inject
 async def get_redis_client(
     db_settings: RedisDatabaseSettings = Provide(
@@ -142,10 +148,10 @@ def get_user_repository(
     #   Tricky part here is that we want to inject only one of the repositories - either
     #   SqliteUserRepository or RedisUserRepository.
     if db_type == "sqlite":
-        with enter(get_sqlite_user_repository) as repo:
+        with resolve(get_sqlite_user_repository) as repo:
             yield repo
     elif db_type == "redis":
-        with enter(get_redis_user_repository) as repo:
+        with resolve(get_redis_user_repository) as repo:
             yield repo
     else:
         raise ValueError(f"Unsupported database type: {db_type}")
@@ -159,7 +165,8 @@ def get_user_repository(
 #
 #   In real project we would use `httpx.AsyncClient` with connection pooling
 #   and reuse the same instance of the client across multiple requests.
-@dependency(scope_class=RequestScope)
+@registry.set_scope(scope_class=RequestScope)
+@cli_registry.set_scope(scope_class=RequestScope)
 async def get_open_meteo_http_client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(timeout=5) as client:
         logger.info(
@@ -206,3 +213,7 @@ def dependencies_for_init(
         return [get_redis_client]
 
     return []
+
+
+registry.add_for_init(dependencies_for_init)
+cli_registry.add_for_init(dependencies_for_init)

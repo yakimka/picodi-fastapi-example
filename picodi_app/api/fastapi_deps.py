@@ -17,7 +17,7 @@ You can use it with FastAPI, Django, Flask, or any other Python framework.
 
 So, this file contains only FastAPI dependencies that related only to FastAPI views.
 Parsing query strings, request bodies, and headers, and other FastAPI-specific
-dependencies should be placed here.
+dependencies are placed here.
 """
 
 from typing import Annotated
